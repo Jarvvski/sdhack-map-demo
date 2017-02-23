@@ -1,0 +1,156 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+        <!-- Place favicon.ico in the root directory -->
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+        <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+			  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+			  crossorigin="anonymous"></script>
+
+        <!--Mapbox #includes -->
+        <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
+        <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
+
+
+
+        <!--End Mapbox -->
+
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+
+
+        <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.12.0.min.js"><\/script>')</script>
+        <script src="js/plugins.js"></script>
+        <script src="js/main.js"></script>
+
+        <!-- Fullscreen : min-height: 100%; -->
+        <div id='map_geo' class='map' style='min-height: 100%;'></div>
+
+
+        <script>
+        // main vars
+        var token       = 'pk.eyJ1IjoicHVzaC1pdCIsImEiOiJjaXppNzkxemQwMDM5MzJxcG56aG92cXF4In0.u8KvjBJBRrhR10acO7p_KQ';
+        var apiStart    = 'https://api.mapbox.com';
+        var mapStyle    = 'mapbox.light'; // https://www.mapbox.com/api-documentation/#styles
+
+        // init map auth
+        L.mapbox.accessToken = token;
+
+        // example origin and destination
+        var launch22 = {lat: 53.4085356, lng: -2.9908805999999686};
+
+        var start = {lat: launch22.lat, lng: launch22.lng};
+        var end = {lat: 53.405936, lng: -2.965572199999997};
+
+        function calculateView(start, end) {
+            var middle;
+
+            var x,y,a,b;
+            var lng,lat;
+
+            x = start.lat;
+            y = start.lng;
+
+            a = end.lat;
+            b = end.lng;
+
+            lng = ((x - a) / 2) + a;
+            lat = ((b - y) / 2) + y;
+
+            return middle = [lng, lat];
+        }
+
+        var geojson = [
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [start.lng, start.lat]
+                },
+                properties: {
+                    'marker-color': '#DE007B',
+                    'marker-size': 'large',
+                    'marker-symbol': 'rocket'
+                }
+            },
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [end.lng, end.lat]
+                },
+                properties: {
+                    'marker-color': '#DE007B',
+                    'marker-size': 'large',
+                    'marker-symbol': 'shop'
+                }
+            }
+        ];
+
+        // init map
+        var map = L.mapbox.map('map_geo', mapStyle, {
+            zoomControl: false }).setView(calculateView(start, end), 14);
+
+        //
+        var features = L.mapbox.featureLayer().setGeoJSON(geojson).addTo(map);
+
+        var route;
+
+        var data = $.ajax({
+            url: apiStart + "/directions/v5/mapbox/driving/"+
+                start.lng +
+                "," + start.lat + ";" +
+                end.lng +
+                "," + end.lat +
+                ".json?access_token=" + token +
+                "&geometries=geojson",
+
+            beforeSend: function( xhr ) {
+                xhr.overrideMimeType( "text/plain; charset=x-user-defined" );
+            }
+        }).done(function( data ) {
+            var json = JSON.parse(data);
+            route = json['routes'][0]['geometry'];
+            // console.log(json['routes'][0]);
+            // map.addLayer({
+            //     "id": "route",
+            //     "type": "line",
+            //     "source": {
+            //         "type": "geojson",
+            //         "data": {
+            //             "type": "Feature",
+            //             "properties": {},
+            //             "geometry": json['routes'][0]
+            //         }
+            //     },
+            //     "layout": {
+            //         "line-join": "round",
+            //         "line-cap": "round"
+            //     },
+            //     "paint": {
+            //         "line-color": "#DE007B",
+            //         "line-width": 8
+            //     }
+            // });
+            var routeLine = L.mapbox.featureLayer().setGeoJSON(route).addTo(map);
+            routeLine.setStyle({color:'#DE007B'})
+            routeLine.path
+        });
+
+        </script>
+    </body>
+</html>
